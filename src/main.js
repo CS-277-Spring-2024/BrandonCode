@@ -112,23 +112,89 @@ const loader2 = new OBJLoader();
 // 	}
 // );
 
+// Variable to store the desk object
+let woodenDesk;
+
+// Variable to track whether the desk is in view
+let deskInView = false;
+
+// Distance threshold for the desk to be considered in view
+const deskDistanceThreshold = 4; // Adjust as needed
+
+// Load the GLTF model for the wooden desk
 const loader3 = new GLTFLoader();
-
 loader3.load('/assets/gltf/wooden_writing_desk_with_props/scene.gltf', function (gltf) {
-    // Access the root object of the loaded gltf
     const root = gltf.scene;
-
-    // Define the scale factor
-    const scaleFactor = 3; // Adjust this value as needed
-
-    // Apply the scale to the root object
+    const scaleFactor = 3;
     root.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    root.position.set(-22,-2,-11.5)
-    // Add the scaled object to the scene
+    root.position.set(-22, -2, -11.5);
+    woodenDesk = root;
     scene.add(root);
-}, undefined, function (error) {
-    console.error(error);
+
+    // Set up raycaster for object detection
+    const raycaster = new THREE.Raycaster();
+    const cameraDirection = new THREE.Vector3();
+
+    // Function to check if the desk is in view
+    function checkDeskInView() {
+        camera.getWorldDirection(cameraDirection);
+        raycaster.set(camera.position, cameraDirection);
+        const intersects = raycaster.intersectObject(woodenDesk, true);
+        const distanceToDesk = camera.position.distanceTo(woodenDesk.position);
+        deskInView = intersects.length > 0 && distanceToDesk < deskDistanceThreshold;
+    }
+
+    // Add update function to continuously check if desk is in view
+    function update() {
+        checkDeskInView();
+        requestAnimationFrame(update);
+    }
+    update();
 });
+
+// Function to handle keyboard input
+// function onKeyDown(event) {
+//     if (event.key === 'f' && deskInView) {
+//         // Pressed 'f' and desk is in view, show image
+//         showDeskImage();
+//     }
+// }
+
+// Add event listener for keyboard input
+window.addEventListener('keydown', onKeyDown);
+
+// Function to display image overlay when the desk is interacted with
+function showDeskImage() {
+    displayImage('/assets/images/Passcodes-header.jpg');
+}
+
+// Function to display image overlay
+function displayImage(imageUrl) {
+    // Create image element
+    const image = document.createElement('img');
+    image.src = imageUrl;
+    image.style.position = 'fixed';
+    image.style.top = '50%';
+    image.style.left = '50%';
+    image.style.transform = 'translate(-50%, -50%)';
+    image.style.zIndex = '9999';
+    image.style.maxWidth = '90%';
+    image.style.maxHeight = '90%';
+    image.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+    
+    // Add click event to remove image when clicked
+    image.addEventListener('click', () => {
+        document.body.removeChild(image);
+    });
+    
+    // Append image to the body
+    document.body.appendChild(image);
+    // Set a timeout to remove the image after a couple of seconds
+    setTimeout(() => {
+        document.body.removeChild(image);
+    }, 3000); // 3000 milliseconds = 3 seconds
+}
+
 
 const loader4 = new GLTFLoader();
 loader4.load('/assets/gltf/metal_door/scene.gltf', function (gltf) {
@@ -285,6 +351,11 @@ function onKeyDown(event) {
                 currentSpeed = 0.1;
                 sprint = false;
             }    
+        case 'f':
+            if (deskInView) {
+                // Pressed 'f' and desk is in view, show image
+                showDeskImage();
+            }            
             break;    
     }
 }
