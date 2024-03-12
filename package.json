@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "three": "^0.161.0",
-    "three.js": "^0.77.1",
     "vite": "^5.1.3"
   }
 }

@@ -130,7 +130,7 @@ if (raycaster){
 })*/
 scene.add(dirLight);
 // create a very large ground plane
-const groundGeometry = new THREE.PlaneBufferGeometry(10000, 10000);
+const groundGeometry = new THREE.PlaneGeometry(10000, 10000);
 const groundMaterial = new THREE.MeshLambertMaterial({
   color: 0xffffff, 
 });
@@ -152,7 +152,7 @@ scene.add(cube);
 const textureLoader = new THREE.TextureLoader();
 
 // Load the texture image
-const texture = textureLoader.load("/assets/textures/ground/ground_0036_color_1k.jpg");
+const texture = textureLoader.load("assets/textures/marble/marble_0008_color_2k.jpg");
 
 texture.wrapS = THREE.RepeatWrapping; // Tiling horizontally
 texture.wrapT = THREE.RepeatWrapping; // Tiling vertically
