@@ -1,10 +1,13 @@
 import * as THREE from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {PointerLockControls} from 'three/examples/jsm/controls/PointerLockControls.js'
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+// Create a stats instance
+const stats = new Stats();
 
+// Add the stats element to the document
+document.body.appendChild(stats.dom);
 // make a scene
 const scene = new THREE.Scene();
 scene.backgroundColor = 0xFF5D33;
@@ -19,7 +22,7 @@ const camera = new THREE.PerspectiveCamera(
     2000
   );
   camera.position.x = -3;
-  camera.position.z = 15;
+  camera.position.z = -5;
   camera.position.y = 2;
   
 //setup a renderer
@@ -44,10 +47,7 @@ document.body.addEventListener( 'click', function () {
     }
 }, false );
 
-document.body.addEventListener( 'f', function () {
-    //lock mouse on screen
-    fpsControls.unlock();
-}, false );
+
 
 //OPTIONAL
 
@@ -152,14 +152,6 @@ loader3.load('/assets/gltf/wooden_writing_desk_with_props/scene.gltf', function 
     update();
 });
 
-// Function to handle keyboard input
-// function onKeyDown(event) {
-//     if (event.key === 'f' && deskInView) {
-//         // Pressed 'f' and desk is in view, show image
-//         showDeskImage();
-//     }
-// }
-
 // Add event listener for keyboard input
 window.addEventListener('keydown', onKeyDown);
 
@@ -256,17 +248,37 @@ const groundGeometry = new THREE.PlaneGeometry(10000, 10000);
 const groundMaterial = new THREE.MeshLambertMaterial({
   color: 0xffffff, 
 });
+
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
 groundMesh.position.set(0, -2, 0);
 groundMesh.rotation.set(Math.PI / -2, 0, 0);
 groundMesh.receiveShadow = true;
 scene.add(groundMesh);
+//keypad logic stuff
+let code = [];
+function newDigit(input){
+    if (input === 'enter' && code.length === 6 && code[0] === 8 && code[1] === 5 && code[2] === 2 && code[3] === 4 && code[4] === 3 && code[5] === 9){
+        console.log("--------ESCAPED-------")
+        camera.position.x = 18;
+        camera.position.z = -5;
+        camera.position.y = 2;
+    } else if (input !== 'x'){
+        code.push(input);   
+        if (code.length > 6) {
+            code.shift();
+        }
+    }
+console.log(code);
+}
+//WALL AND TEXTURE STUFF HERE
+const invisibleMaterial = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0
+});
 
-
-// Create a texture loader
 const textureLoader = new THREE.TextureLoader();
 
-/// Load the texture image
+// Load the texture image
 const texture = textureLoader.load("assets/textures/marble/marble_0008_color_2k.jpg");
 
 texture.wrapS = THREE.RepeatWrapping; // Tiling horizontally
@@ -276,37 +288,72 @@ texture.repeat.set(9, 3); // Repeat the texture 3 times both horizontally and ve
 // Create a vertical wall plane
 const wallGeometry = new THREE.PlaneGeometry(30, 10); // Adjust dimensions as needed
 const wallMaterial = new THREE.MeshPhongMaterial({ map: texture, side: THREE.DoubleSide }); // Apply the texture to the material
+const walls = [];
 
-function createWall(geometry, material, position, rotation) {
+function createWall(geometry, material, position, rotation, name) {
     const wall = new THREE.Mesh(geometry, material);
     wall.position.copy(position);
     wall.rotation.copy(rotation);
     wall.receiveShadow = true;
+    wall.name = name; // Assign a name to the wall
     scene.add(wall);
+    walls.push(wall); // Store the wall mesh in the walls array
     return wall;
 }
-
 // Define parameters for each wall
 const wallParams = [
-    { geometry: wallGeometry, material: wallMaterial, position: new THREE.Vector3(0, 2, -12.5), rotation: new THREE.Euler(0, 0, 0) },
-    { geometry: wallGeometry, material: wallMaterial, position: new THREE.Vector3(0, 2, -2.5), rotation: new THREE.Euler(0, Math.PI, 0) },
-    { geometry: wallGeometry, material: wallMaterial, position: new THREE.Vector3(0, 7, -7.5), rotation: new THREE.Euler(-Math.PI / 2, 0, 0) },
-    { geometry: new THREE.PlaneGeometry(10, 10), material: wallMaterial, position: new THREE.Vector3(15, 2, -7.5), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
-    { geometry: new THREE.PlaneGeometry(6, 10), material: wallMaterial, position: new THREE.Vector3(-15, 2, -15.5), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
-    { geometry: new THREE.PlaneGeometry(6, 10), material: wallMaterial, position: new THREE.Vector3(-15, 2, .5), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
-    { geometry: new THREE.PlaneGeometry(15, 10), material: wallMaterial, position: new THREE.Vector3(-22.5, 2, 3.5), rotation: new THREE.Euler(0, 0, 0) },
-    { geometry: new THREE.PlaneGeometry(15, 10), material: wallMaterial, position: new THREE.Vector3(-22.5, 2, -18.5), rotation: new THREE.Euler(0, 0, 0) },
-    { geometry: new THREE.PlaneGeometry(22, 10), material: wallMaterial, position: new THREE.Vector3(-30, 2, -7.5), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
-    { geometry: new THREE.PlaneGeometry(15, 22), material: wallMaterial, position: new THREE.Vector3(-22.5, 7, -7.5), rotation: new THREE.Euler(-Math.PI / 2, 0, 0) },
+    { geometry: wallGeometry, material: wallMaterial, position: new THREE.Vector3(0, 2, -12.5), rotation: new THREE.Euler(0, 0, 0), name: 'x' },
+    { geometry: wallGeometry, material: wallMaterial, position: new THREE.Vector3(0, 2, -2.5), rotation: new THREE.Euler(0, Math.PI, 0), name: 'x' },
+    { geometry: wallGeometry, material: wallMaterial, position: new THREE.Vector3(0, 7, -7.5), rotation: new THREE.Euler(-Math.PI / 2, 0, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(10, 10), material: wallMaterial, position: new THREE.Vector3(15, 2, -7.5), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(6, 10), material: wallMaterial, position: new THREE.Vector3(-15, 2, -15.5), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(6, 10), material: wallMaterial, position: new THREE.Vector3(-15, 2, .5), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(15, 10), material: wallMaterial, position: new THREE.Vector3(-22.5, 2, 3.5), rotation: new THREE.Euler(0, 0, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(15, 10), material: wallMaterial, position: new THREE.Vector3(-22.5, 2, -18.5), rotation: new THREE.Euler(0, 0, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(22, 10), material: wallMaterial, position: new THREE.Vector3(-30, 2, -7.5), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 'x' },
+    { geometry: new THREE.PlaneGeometry(15, 22), material: wallMaterial, position: new THREE.Vector3(-22.5, 7, -7.5), rotation: new THREE.Euler(-Math.PI / 2, 0, 0), name: 'x' },
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 2, -4.44), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 6 }, //middle row
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 2, -4.62), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 5 },
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 2, -4.78), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 4 },
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 2.19, -4.44), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 3 }, //upper row
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 2.19, -4.62), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 2 },
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 2.19, -4.78), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 1 },    
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 1.81, -4.44), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 9 }, //bottom row
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 1.81, -4.62), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 8 },
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 1.82, -4.79), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 7 },
+    {geometry: new THREE.PlaneGeometry(.1, .1), material: invisibleMaterial, position: new THREE.Vector3(14.8, 1.65, -4.62), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 0 },
+    {geometry: new THREE.PlaneGeometry(.12, .2), material: invisibleMaterial, position: new THREE.Vector3(14.8, 1.95, -4.22), rotation: new THREE.Euler(0, -Math.PI / 2, 0), name: 'enter' }
 
-
+    
 ];
+
+
 
 // Add walls to the scene using the parameters
 wallParams.forEach(params => {
-    createWall(params.geometry, params.material, params.position, params.rotation);
+    createWall(params.geometry, params.material, params.position, params.rotation, params.name);
 });
 
+// Add event listener for key press
+document.addEventListener('keypress', function(event) {
+    if (event.key === 'r') {
+        // Create a raycaster
+        const raycaster = new THREE.Raycaster();
+        
+        // Define the direction of the raycaster based on the camera's direction
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        
+        // Calculate intersections with the walls
+        const intersects = raycaster.intersectObjects(walls);
+        
+        // If there is at least one intersection, get the first wall and do something with it
+        if (intersects.length > 0) {
+            const selectedWall = intersects[0].object;
+            console.log('Selected Wall:', selectedWall.name);
+            newDigit(selectedWall.name);
+        }
+    }
+});
 // Define variables to keep track of player movement
 const playerSpeed = 0.1;
 let currentSpeed = playerSpeed; // Variable to keep track of current speed
@@ -351,11 +398,14 @@ function onKeyDown(event) {
                 currentSpeed = 0.1;
                 sprint = false;
             }    
+            break;
         case 'f':
             if (deskInView) {
                 // Pressed 'f' and desk is in view, show image
                 showDeskImage();
-            }            
+                
+            }
+            interactWithWall();            
             break;    
     }
 }
@@ -384,6 +434,7 @@ function onKeyUp(event) {
 }
 
 function animate() {
+    stats.update();
     requestAnimationFrame(animate);
 
     // Reset playerDirection vector
